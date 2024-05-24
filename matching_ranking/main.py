@@ -12,7 +12,7 @@ app = FastAPI()
 async def matching(body: Body):
     top_results = body.data
     
-    qrels_file = '../webis-touche2020/qrels/test.tsv'
+    qrels_file = '../../webis-touche2020/qrels/test.tsv'
     qrels = create_qrels_inverted(qrels_file)
     
     aps = []

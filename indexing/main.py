@@ -10,19 +10,19 @@ import json
 
 
 def get_tfidf_matrix():
-    with open('../src/matrix.pkl', 'rb') as mf:
+    with open('../text-processing/matrix.pkl', 'rb') as mf:
         tfidf_matrix = dill.load(mf)
     mf.close()
     return tfidf_matrix
 
 def doc(i):
-    with open(f'../src/docs/doc{i}', 'r', encoding='utf-8') as f:
+    with open(f'../../datafiles/docs/doc{i}', 'r', encoding='utf-8') as f:
         doc = f.read()
     f.close()
     return doc
 
 def key(i):
-    with open(f'../src/keys/key{i}', 'r', encoding='utf-8') as f:
+    with open(f'../../datafiles/keys/key{i}', 'r', encoding='utf-8') as f:
         key = f.read()
     f.close()
     return key

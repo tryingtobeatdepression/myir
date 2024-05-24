@@ -5,16 +5,20 @@ import dill
 from sklearn.feature_extraction.text import TfidfVectorizer
 import json
 
+def get_vectorizer_instance() -> TfidfVectorizer: 
+    with open('model.pkl', 'rb') as mf:
+        vectorizer: TfidfVectorizer = dill.load(mf)
+    mf.close() 
+    return vectorizer
+
 app = FastAPI(
     title="Text Processing"
 )
 
 @app.get('/', )
 async def text_processing_service(q: Union[str, None] = None):  
-    with open('model.pkl', 'rb') as mf:
-        vectorizer: TfidfVectorizer = dill.load(mf)
-    mf.close()  
-    user_query_vector = vectorizer.transform([q])
+     
+    user_query_vector = get_vectorizer_instance().transform([q])
     indexing_service_url = 'http://localhost:3000'
     
     async with httpx.AsyncClient() as client:
