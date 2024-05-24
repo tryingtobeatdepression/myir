@@ -10,7 +10,7 @@ import json
 
 
 def get_tfidf_matrix():
-    with open('../text-processing/matrix.pkl', 'rb') as mf:
+    with open('../text_processing/matrix.pkl', 'rb') as mf:
         tfidf_matrix = dill.load(mf)
     mf.close()
     return tfidf_matrix
