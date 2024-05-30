@@ -1,12 +1,9 @@
 from fastapi import FastAPI, HTTPException
-import httpx
 from pydantic import BaseModel
-import typing
-import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+import httpx
 import dill 
-from scipy.sparse import csr_matrix
-import json
 
 
 def get_tfidf_matrix():
@@ -42,9 +39,7 @@ class Body(BaseModel):
 app = FastAPI()
 
 @app.post('/')
-async def indexing(body: Body):
-    # top_results = find_top_k_results()
-    
+async def indexing(body: Body):    
     user_query_vector = body.data
     tfidf_matrix = get_tfidf_matrix()
     
@@ -61,7 +56,6 @@ async def indexing(body: Body):
         response = await client.post(
             url=matching_service_url,
             json={"data": top_results },
-            timeout=120
         )
     if response.status_code != 200:
         raise HTTPException(
