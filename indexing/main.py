@@ -31,7 +31,7 @@ async def indexing(body: Body):
         response = await client.post(
             url=matching_service_url,
             json={
-                "data": query_vector.toarray().tolist(),
+                "query_vector": query_vector.toarray().tolist(),
                 "options": options
             },
         )
