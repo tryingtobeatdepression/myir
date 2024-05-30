@@ -1,70 +1,48 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from sklearn.metrics.pairwise import cosine_similarity
+from indexing import get_tfidf_matrix, get_vectorizer, search
 import numpy as np
 import httpx
 import dill 
 
 
-def get_tfidf_matrix():
-    with open('../text_processing/matrix.pkl', 'rb') as mf:
-        tfidf_matrix = dill.load(mf)
-    mf.close()
-    return tfidf_matrix
-
-def doc(i):
-    with open(f'../../datafiles/docs/doc{i}', 'r', encoding='utf-8') as f:
-        doc = f.read()
-    f.close()
-    return doc
-
-def key(i):
-    with open(f'../../datafiles/keys/key{i}', 'r', encoding='utf-8') as f:
-        key = f.read()
-    f.close()
-    return key
-
-def find_top_k_results(user_query_vector, tfidf_matrix, k=10): 
-    similarites = cosine_similarity(user_query_vector, tfidf_matrix)
-    top_indices = np.argpartition(similarites, -k, axis=None)[-k:]
-    
-    top_indices_sorted = top_indices[np.argsort(similarites.ravel()[top_indices])]
-    
-    top_results = [(doc(i), key(i), similarites[0, i]) for i in top_indices_sorted]    
-    return top_results
+class Options(BaseModel):
+    dataset: str
+    embedding: bool
+    clustering: bool
 
 class Body(BaseModel):
-    data: list
+    data: str
+    options: Options
 
 app = FastAPI()
+matching_service_url = 'http://localhost:3500'
+
 
 @app.post('/')
 async def indexing(body: Body):    
-    user_query_vector = body.data
-    tfidf_matrix = get_tfidf_matrix()
+    query = body.data
+    options = body.options
     
-    top_results = find_top_k_results(user_query_vector, tfidf_matrix)
-        
-    matching_service_url = 'http://localhost:3500'
-    
-    with open('results.txt', 'w', encoding='utf-8') as f:
-        for doc, doc_id, similarity_score in top_results:
-            f.write(f'DocId: {doc_id}\n')
-    f.close()
+    query_vector = get_vectorizer(dataset=options.dataset).transform([query])
             
     async with httpx.AsyncClient() as client:
         response = await client.post(
             url=matching_service_url,
-            json={"data": top_results },
+            json={
+                "data": query_vector.toarray().tolist(),
+                "options": options
+            },
         )
     if response.status_code != 200:
         raise HTTPException(
-            status_code= response.status_code,
+            status_code=response.status_code,
             detail="Error calling matching & ranking service!",
         )
     
     res = response.json()
     
     return {
-        "data": [res['data'], [doc for doc, did, sm in top_results]],
+        "data": res['data'],
     }
