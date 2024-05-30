@@ -7,7 +7,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import re
 import dill
-from textblob.en import Spelling
 
 queries_file = 'queries.pkl'
 speller_file = 'speller.pkl'
@@ -32,7 +31,9 @@ def get_queries(pkl_file_path: str = queries_file) -> dict:
     return queries
 
 def suggest_questions(
-    user_query: str, queries: dict, vectorizer: TfidfVectorizer,
+    user_query: str,
+    queries: dict,
+    vectorizer: TfidfVectorizer,
     k=2
 ):
     qs = list(queries.values())
@@ -40,7 +41,7 @@ def suggest_questions(
     queries_matrix = vectorizer.transform(qs)
     similarities = cosine_similarity(user_query_vector, queries_matrix)
     top_indices = np.argpartition(similarities, -k, axis=None)[-k:]
-    top_results = [(qs[i], similarities[0, i]) for i in top_indices]
+    top_results = [qs[i] for i in top_indices]
     return top_results
 
 def spell_check(user_query, spelling: Spelling):

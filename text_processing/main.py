@@ -18,16 +18,14 @@ app = FastAPI()
 async def suggest(q: Union[str, None] = None):
     if q is None:
         return
-    suggested = []
     corr_query = spell_check(q, get_spelling())
     top_res_questions = suggest_questions(
         user_query=corr_query,
         queries=get_queries(),
         vectorizer=get_vectorizer(),
     )
-    for query, sim_score in top_res_questions:
-        suggested.append(query)   
-    return suggested
+    
+    return [query for query, k in top_res_questions]
 
 @app.get('/', status_code=200)
 async def text_processing_service(
@@ -42,7 +40,7 @@ async def text_processing_service(
         response = await client.post(
             url=indexing_service_url,
             json={
-                "data": q,
+                "query": q,
                 "options": {
                     "dataset": dataset,
                     "embedding": embedding,

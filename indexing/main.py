@@ -1,11 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from sklearn.metrics.pairwise import cosine_similarity
-from indexing import get_tfidf_matrix, get_vectorizer, search
-import numpy as np
+from indexing import transform_by
 import httpx
-import dill 
-
 
 class Options(BaseModel):
     dataset: str
@@ -13,7 +9,7 @@ class Options(BaseModel):
     clustering: bool
 
 class Body(BaseModel):
-    data: str
+    query: str
     options: Options
 
 app = FastAPI()
@@ -22,10 +18,14 @@ matching_service_url = 'http://localhost:3500'
 
 @app.post('/')
 async def indexing(body: Body):    
-    query = body.data
+    query = body.query
     options = body.options
     
-    query_vector = get_vectorizer(dataset=options.dataset).transform([query])
+    query_vector = transform_by(
+        query=query,
+        dataset=options.dataset,
+        embedding=options.embedding,
+    )
             
     async with httpx.AsyncClient() as client:
         response = await client.post(

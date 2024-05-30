@@ -52,6 +52,12 @@ def search(query_vector, tfidf_matrix, k=10):
     top_results = [doc(i) for i in top_indices_sorted]
     return top_results
 
+def word2vec_search(query_vector, corpus_w2v, k=10):
+    similarities = cosine_similarity(query_vector, corpus_w2v).flatten()
+    top_indices = similarities.argsort()[-k:][::-1]  
+    top_indices = [doc(i) for i in top_indices]
+    return top_indices
+
 def search_by(
     query_vector,
     dataset: str = 'webis',
