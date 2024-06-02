@@ -1,7 +1,8 @@
 from typing import Union
 from fastapi import FastAPI, HTTPException
 import httpx
-from text_processing import get_queries, get_spelling, get_vectorizer, spell_check, suggest_questions
+from lib import get_queries, get_spelling, get_vectorizer
+from text_processing import spell_check, suggest_questions
 
 app = FastAPI()
 
@@ -10,13 +11,13 @@ async def suggest(
     q: Union[str, None] = None,
     dataset: str = 'touche'
 ):
-    if q is None:
-        return
-    corr_query = spell_check(q, get_spelling())
+    if q is None: 
+        return None
+    corr_query = spell_check(q, get_spelling(dataset))
     top_res_questions = suggest_questions(
         user_query=corr_query,
-        queries=get_queries(),
-        vectorizer=get_vectorizer(),
+        queries=get_queries(dataset),
+        vectorizer=get_vectorizer(dataset),
     )
     
     return [query for query in top_res_questions]
@@ -36,7 +37,6 @@ async def text_processing_service(
                 "query": q,
                 "options": {
                     "dataset": dataset,
-                    "embedding": embedding,
                     "clustering": clustering,
                 }
             },
