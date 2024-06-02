@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException
 import httpx
 from lib import get_queries, get_spelling, get_vectorizer
 from text_processing import spell_check, suggest_questions
+from textblob.en import Spelling
 
 app = FastAPI()
 
@@ -13,9 +14,9 @@ async def suggest(
 ):
     if q is None: 
         return None
-    corr_query = spell_check(q, get_spelling(dataset))
+    corr_query = spell_check(query=q, spelling=Spelling())
     top_res_questions = suggest_questions(
-        user_query=corr_query,
+        query=corr_query,
         queries=get_queries(dataset),
         vectorizer=get_vectorizer(dataset),
     )

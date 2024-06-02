@@ -7,6 +7,10 @@ from sklearn.cluster import KMeans
 import numpy as np
 from lib import doc, get_tfidf_matrix, get_kmeans
 
+def get_topic_tags(kmeans: KMeans, terms: list, lab_idx, top_n=5):
+    order_centroids = kmeans.cluster_centers_.argsort()[:, ::-1]
+    return [str(terms[idx]) for idx in order_centroids[lab_idx, :top_n]]
+
 def get_cluster_docs_indicies(kmeans: KMeans, k=3) -> dict:
     indicies = {i: [] for i in range(k)}
     for i, label in enumerate(kmeans.labels_):
@@ -22,14 +26,13 @@ def search(query_vector, tfidf_matrix, dataset, k=10):
 
 def search_by_cluster(user_query_vec, kmeans: KMeans, dataset: str, tfidf_matrix, top_k=10):
     query_cluster_lb = kmeans.predict(user_query_vec)[0]
-    clustered_indicies: dict = get_cluster_docs_indicies(kmeans)
+    clustered_indicies = get_cluster_docs_indicies(kmeans)
     cluster_docs_indices = clustered_indicies[query_cluster_lb]
-
     retrieved_docs_vecs = tfidf_matrix[cluster_docs_indices]
     similarities = cosine_similarity(user_query_vec, retrieved_docs_vecs).flatten()
     top_indices = np.argsort(similarities)[-top_k:][::-1] 
     top_results = [doc(i, dataset=dataset) for i in top_indices]
-    return top_results, query_cluster_lb
+    return top_results
 
 def search_by(
     query_vector, dataset: str = 'touche', clustering: bool = False,

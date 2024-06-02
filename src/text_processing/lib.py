@@ -6,8 +6,8 @@ from textblob.en import Spelling
 import dill
 
 # DATASETS CONFIGURATION
-antique_path = './datasets/antique/antique_'
-touche_path = './datasets/touche/touche_'
+antique_path = '../../datasets/antique/antique_'
+touche_path = '../../datasets/touche/touche_'
 doc_path = '-datafiles/docs/doc'
 key_path = '-datafiles/keys/key'
 
@@ -70,7 +70,7 @@ def key(i, dataset: str = 'touche'):
 
 def get_spelling(dataset: str = 'touche') -> Spelling:
     file_path = touche_spelling_file_path if dataset=='touche' else antique_spelling_file_path
-    with open(file_path, 'rb', encoding='utf-8') as f:
+    with open(file_path, 'rb') as f:
         speller: Spelling = dill.load(f)
     f.close()
     return speller

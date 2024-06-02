@@ -71,7 +71,7 @@ def key(i, dataset: str = 'touche'):
 
 def get_spelling(dataset: str = 'touche') -> Spelling:
     file_path = touche_spelling_file_path if dataset=='touche' else antique_spelling_file_path
-    with open(file_path, 'rb', encoding='utf-8') as f:
+    with open(file_path, 'rb') as f:
         speller: Spelling = dill.load(f)
     f.close()
     return speller
@@ -88,7 +88,14 @@ def get_queries(dataset: str = 'touche') -> dict:
 
 def get_kmeans(dataset: str = 'touche') -> KMeans:
     file_path = touche_kmeans_file_path if dataset=='touche' else antique_kmeans_file_path
-    with open(file_path, 'rb', encoding='utf-8') as f:
+    with open(file_path, 'rb') as f:
         kmeans: KMeans = dill.load(f)
     f.close()
     return kmeans
+
+def get_terms(dataset: str = 'touche') -> list:
+    file_path = touche_terms_file_path if dataset=='touche' else antique_terms_file_path
+    with open(file_path, 'rb') as f:
+        terms: list = dill.load(f)
+    f.close()
+    return terms
