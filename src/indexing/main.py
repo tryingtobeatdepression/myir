@@ -24,13 +24,16 @@ async def indexing(body: Body):
         query=query,
         dataset=options.dataset,
     )
-            
+                
     async with httpx.AsyncClient() as client:
         response = await client.post(
             url=matching_service_url,
             json={
                 "query_vector": query_vector.toarray().tolist(),
-                "options": options
+                "options": {
+                    "dataset": options.dataset,
+                    "clustering": options.clustering,
+                },
             },
         )
     if response.status_code != 200:

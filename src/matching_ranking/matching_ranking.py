@@ -1,74 +1,51 @@
 import importlib
 importlib.import_module('matching_ranking')
+
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
 import numpy as np
-import dill
+from lib import doc, get_tfidf_matrix, get_kmeans
 
-matrix_file = '../text_processing/matrix.pkl'
-model_file = 'model.pkl'
-doc_i_file = '../../datafiles/docs/doc'
-key_i_file = '../../datafiles/keys/key'
+def get_cluster_docs_indicies(kmeans: KMeans, k=3) -> dict:
+    indicies = {i: [] for i in range(k)}
+    for i, label in enumerate(kmeans.labels_):
+        indicies[label].append(i)
+    return indicies
 
-def get_vectorizer(
-    dataset: str = 'webis',
-    pkl_file_path: str = model_file
-) -> TfidfVectorizer:
-    # TODO: Dataset choice
-    with open(f'{pkl_file_path}', 'rb') as f:
-        vectorizer: TfidfVectorizer = dill.load(f)
-    f.close()
-    return vectorizer
-
-def get_tfidf_matrix(
-    dataset: str = 'webis',
-    pkl_file_path: str = matrix_file
-):
-    with open(pkl_file_path, 'rb') as mf:
-        tfidf_matrix = dill.load(mf)
-    mf.close()
-    return tfidf_matrix
-
-def doc(i, file_path: str = doc_i_file):
-    with open(f'{file_path}{i}', 'r', encoding='utf-8') as f:
-        doc = f.read()
-    f.close()
-    return doc
-
-def key(i, file_path: str = key_i_file):
-    with open(f'{file_path}{i}', 'r', encoding='utf-8') as f:
-        key = f.read()
-    f.close()
-    return key
-
-def search(query_vector, tfidf_matrix, k=10): 
+def search(query_vector, tfidf_matrix, dataset, k=10): 
     similarities = cosine_similarity(query_vector, tfidf_matrix)
     top_indices = np.argpartition(similarities, -k, axis=None)[-k:]
-
     top_indices_sorted = top_indices[np.argsort(-similarities.ravel()[top_indices])]
-    
-    # top_results = [(doc(i), key(i), similarities[0, i]) for i in top_indices_sorted]
-
-    top_results = [doc(i) for i in top_indices_sorted]
+    top_results = [doc(i, dataset=dataset) for i in top_indices_sorted]
     return top_results
 
-def word2vec_search(query_vector, corpus_w2v, k=10):
-    similarities = cosine_similarity(query_vector, corpus_w2v).flatten()
-    top_indices = similarities.argsort()[-k:][::-1]  
-    top_indices = [doc(i) for i in top_indices]
-    return top_indices
+def search_by_cluster(user_query_vec, kmeans: KMeans, dataset: str, tfidf_matrix, top_k=10):
+    query_cluster_lb = kmeans.predict(user_query_vec)[0]
+    clustered_indicies: dict = get_cluster_docs_indicies(kmeans)
+    cluster_docs_indices = clustered_indicies[query_cluster_lb]
+
+    retrieved_docs_vecs = tfidf_matrix[cluster_docs_indices]
+    similarities = cosine_similarity(user_query_vec, retrieved_docs_vecs).flatten()
+    top_indices = np.argsort(similarities)[-top_k:][::-1] 
+    top_results = [doc(i, dataset=dataset) for i in top_indices]
+    return top_results, query_cluster_lb
 
 def search_by(
-    query_vector,
-    dataset: str = 'webis',
-    clustering: bool = False,
-    embedding: bool = False
+    query_vector, dataset: str = 'touche', clustering: bool = False,
 ):
     top_k_docs = []
-    
-    top_k_docs = search(
-        query_vector=query_vector,
-        tfidf_matrix=get_tfidf_matrix(dataset=dataset)
-    )
-    
+    if clustering:
+        top_k_docs = search_by_cluster(
+            user_query_vec=query_vector,
+            dataset=dataset,
+            kmeans=get_kmeans(dataset=dataset),
+            tfidf_matrix=get_tfidf_matrix(dataset=dataset),
+        )
+    else:
+        top_k_docs = search(
+            query_vector=query_vector,
+            tfidf_matrix=get_tfidf_matrix(dataset=dataset),
+            dataset=dataset,
+        )
     return top_k_docs

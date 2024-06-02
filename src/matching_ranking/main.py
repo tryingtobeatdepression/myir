@@ -1,10 +1,9 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from matching_ranking import get_tfidf_matrix, search, search_by
+from matching_ranking import search_by
 
 class Options(BaseModel):
     dataset: str
-    embedding: bool
     clustering: bool
 
 class Body(BaseModel):
@@ -21,7 +20,6 @@ async def matching(body: Body):
     top_k_docs = search_by(
         query_vector=query_vector,
         dataset=options.dataset,
-        embedding=options.embedding,
         clustering=options.clustering
     )
 

@@ -1,7 +1,7 @@
 import importlib
 importlib.import_module('indexing')
 
-from lib.lib import get_vectorizer
+from lib import get_vectorizer
 
 def transform_by(
     query: str,
