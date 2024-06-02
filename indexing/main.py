@@ -5,7 +5,6 @@ import httpx
 
 class Options(BaseModel):
     dataset: str
-    embedding: bool
     clustering: bool
 
 class Body(BaseModel):
@@ -24,7 +23,6 @@ async def indexing(body: Body):
     query_vector = transform_by(
         query=query,
         dataset=options.dataset,
-        embedding=options.embedding,
     )
             
     async with httpx.AsyncClient() as client:

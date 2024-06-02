@@ -5,17 +5,11 @@ from text_processing import get_queries, get_spelling, get_vectorizer, spell_che
 
 app = FastAPI()
 
-'''
-{
-    "dataset": string => "webis", "antique",
-    "q": string => user input
-    "embedding": boolean,
-    "clustering": boolean,
-}
-'''
-
 @app.get('/suggest', status_code=200)
-async def suggest(q: Union[str, None] = None):
+async def suggest(
+    q: Union[str, None] = None,
+    dataset: str = 'touche'
+):
     if q is None:
         return
     corr_query = spell_check(q, get_spelling())
@@ -25,13 +19,12 @@ async def suggest(q: Union[str, None] = None):
         vectorizer=get_vectorizer(),
     )
     
-    return [query for query, k in top_res_questions]
+    return [query for query in top_res_questions]
 
 @app.get('/', status_code=200)
 async def text_processing_service(
     q: Union[str, None] = None,
-    dataset: str = "webis",
-    embedding: bool = False,
+    dataset: str = "touche",
     clustering: bool = False,
 ):  
     indexing_service_url = 'http://localhost:3000'

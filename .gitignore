@@ -1,3 +1,5 @@
 *.tsv
 *.txt
 *.pkl
+./datasets
+./.vscode
